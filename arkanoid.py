@@ -24,9 +24,16 @@ def destroy_brick():
                 canvas.delete(i)
                 movement[1] *= -1
 
-def rebounding():
-    list = [-1,0,1]
-    return [random.choice(list),-1]
+def desk_hit(cd, cb):
+    desk_middle = (cd[2]-cd[0])/2 + cd[0]
+    if cb[2] <= desk_middle:
+        return [-d,-d]
+    elif desk_middle <= cb[0]:
+        return [d,-d]
+    elif cb[0] < desk_middle and desk_middle< cb[2]:
+        return [0,-d]
+    # list = [-1,0,1]
+    # return [random.choice(list),-1]
 
 def ball_move():
     global movement
@@ -35,7 +42,7 @@ def ball_move():
     coord_desk = canvas.coords(desk)
     destroy_brick()
     if ball in canvas.find_overlapping(coord_desk[0],coord_desk[1],coord_desk[2],coord_desk[3]):
-        movement = rebounding()
+        movement = desk_hit(coord_desk,coord_ball)
     if coord_ball[0] < 0: #horny pravy roh x, lava strana
         movement[0] *= (-1)
         canvas.itemconfig(ball,fill="black")
@@ -53,9 +60,9 @@ def ball_move():
     if len(bricks) == 0:
         canvas.configure(bg="black")
         canvas.delete("all")
-        text = canvas.create_text(w/2,h/2, text="VYHRAL SI!", fill="white", font="Arial 20")
+        text = canvas.create_text(w/2,h/2, text="VYHRAL SI!\nčas:"+str(ftime//count_click), fill="white", font="Arial 20")
         status = False
-    canvas.after(40, ball_move)
+    canvas.after(35, ball_move)
 
 def mover(e):
     global x
@@ -65,21 +72,21 @@ def mover(e):
         x = e.x
 
 def starter(e):
-    global x
+    global x,count_click
     canvas.delete(text)
     zoz = canvas.find_overlapping(e.x, e.y, e.x+1, e.y+1)
     if desk in zoz:
         x = e.x
         ball_move()
-
+        timer()
+        count_click += 1
 def timer():
     global ftime
     ftime += 1
     canvas.itemconfig(t, text=ftime)
     if status == True:
         canvas.after(1000, timer)
-    if ftime == False:
-        canvas.delete(t)
+
 
 def prepare_bricks():
     for y in range(brick_count_y):
@@ -99,12 +106,13 @@ h = 450
 canvas = tk.Canvas(width = w, height = h, bg = "black")
 canvas.pack()
 
-d=15
+d=5
 movement = [1*d,1*d]
 
 status = True
 ftime = 0
 t = canvas.create_text(w/5*4,h/5*4, text=ftime, fill="orchid", font="Arial 30")
+count_click = 0
 
 brick_w = 65
 brick_h = 20
@@ -117,11 +125,9 @@ text = canvas.create_text(w/2,h/2+30,text="ZAČNI HRAŤ!", fill="white", font="A
 desk = canvas.create_rectangle(w/2-50, h-20, w/2+50, h, fill="purple")
 
 prepare_bricks()
-timer()
 
 canvas.bind("<Button-1>", starter)
 canvas.bind("<B1-Motion>", mover)
 
 
 win.mainloop()
-
